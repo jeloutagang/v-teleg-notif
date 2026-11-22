@@ -20,7 +20,8 @@ def save_seen(data):
 
 def send_telegram(text):
     url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
-    requests.post(url, data={"chat_id": CHAT_ID, "text": text, "disable_web_page_preview": False})
+    r = requests.post(url, data={"chat_id": CHAT_ID, "text": text, "disable_web_page_preview": False})
+    print("Telegram response:", r.status_code, r.text)
 
 def get_latest_video(profile_url):
     ydl_opts = {
