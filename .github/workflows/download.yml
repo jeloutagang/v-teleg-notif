@@ -16,7 +16,7 @@ jobs:
     steps:
       - name: Install yt-dlp and rclone
         run: |
-          pip install -U yt-dlp
+          pip install -U "yt-dlp[curl-cffi]"
           curl https://rclone.org/install.sh | sudo bash
 
       - name: Configure rclone
@@ -27,10 +27,13 @@ jobs:
           echo "$RCLONE_CONFIG_DATA" > ~/.config/rclone/rclone.conf
 
       - name: Wait for Vimeo processing & Download
+        env:
+          VIMEO_COOKIES_DATA: ${{ secrets.VIMEO_COOKIES }}
         run: |
           sleep 30
+          echo "$VIMEO_COOKIES_DATA" > cookies.txt
           mkdir -p downloads
-          yt-dlp -f "bestvideo+bestaudio/best" --merge-output-format mp4 -o "downloads/%(title)s.%(ext)s" "${{ github.event.inputs.video_url }}"
+          yt-dlp --cookies cookies.txt -f "bestvideo+bestaudio/best" --merge-output-format mp4 -o "downloads/%(title)s.%(ext)s" "${{ github.event.inputs.video_url }}"
 
       - name: Upload to Google Drive
         run: |
