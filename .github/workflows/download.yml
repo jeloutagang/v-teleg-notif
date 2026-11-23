@@ -30,10 +30,16 @@ jobs:
         env:
           VIMEO_COOKIES_DATA: ${{ secrets.VIMEO_COOKIES }}
         run: |
-          sleep 30
           echo "$VIMEO_COOKIES_DATA" > cookies.txt
           mkdir -p downloads
-          yt-dlp --cookies cookies.txt -f "bestvideo+bestaudio/best" --merge-output-format mp4 -o "downloads/%(title)s.%(ext)s" "${{ github.event.inputs.video_url }}"
+          for i in {1..10}; do
+            echo "Attempt $i..."
+            if yt-dlp --cookies cookies.txt -f "bestvideo+bestaudio/best" --merge-output-format mp4 -o "downloads/%(title)s.%(ext)s" "${{ github.event.inputs.video_url }}"; then
+              break
+            fi
+            if [ "$i" -eq 10 ]; then exit 1; fi
+            sleep 30
+          done
 
       - name: Upload to Google Drive
         run: |
