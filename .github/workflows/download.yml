@@ -27,20 +27,17 @@ jobs:
           echo "$RCLONE_CONFIG_DATA" > ~/.config/rclone/rclone.conf
 
       - name: Wait for Vimeo processing & Download
+        env:
+          VIMEO_COOKIES_DATA: ${{ secrets.VIMEO_COOKIES }}
         run: |
           mkdir -p downloads
-          VIDEO_ID=$(echo "${{ github.event.inputs.video_url }}" | grep -oE '[0-9]{6,}' | head -n 1 || true)
-          if [ -z "$VIDEO_ID" ]; then
-            echo "Ma qderch y-jbed l-ID men : ${{ github.event.inputs.video_url }}"
-            exit 1
-          fi
-          PLAYER_URL="https://player.vimeo.com/video/${VIDEO_ID}"
-          for i in {1..10}; do
-            echo "Attempt $i for $PLAYER_URL..."
-            if yt-dlp --impersonate chrome --referer "https://vimeo.com/" -f "bestvideo+bestaudio/best" --merge-output-format mp4 -o "downloads/%(title)s.%(ext)s" "$PLAYER_URL"; then
+          for i in {1..5}; do
+            echo "Attempt $i..."
+            echo "$VIMEO_COOKIES_DATA" > cookies.txt
+            if yt-dlp --impersonate chrome --cookies cookies.txt -f "bestvideo+bestaudio/best" --merge-output-format mp4 -o "downloads/%(title)s.%(ext)s" "${{ github.event.inputs.video_url }}"; then
               break
             fi
-            if [ "$i" -eq 10 ]; then exit 1; fi
+            if [ "$i" -eq 5 ]; then exit 1; fi
             sleep 30
           done
       - name: Upload to Google Drive
