@@ -1,0 +1,46 @@
+name: Download Vimeo to Drive
+
+on:
+  workflow_dispatch:
+    inputs:
+      video_url:
+        description: 'Vimeo Video URL'
+        required: true
+      video_title:
+        description: 'Video Title'
+        required: false
+
+jobs:
+  download:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install yt-dlp and rclone
+        run: |
+          pip install -U yt-dlp
+          curl https://rclone.org/install.sh | sudo bash
+
+      - name: Configure rclone
+        env:
+          RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG }}
+        run: |
+          mkdir -p ~/.config/rclone
+          echo "$RCLONE_CONFIG_DATA" > ~/.config/rclone/rclone.conf
+
+      - name: Wait for Vimeo processing & Download
+        run: |
+          sleep 30
+          mkdir -p downloads
+          yt-dlp -f "bestvideo+bestaudio/best" --merge-output-format mp4 -o "downloads/%(title)s.%(ext)s" "${{ github.event.inputs.video_url }}"
+
+      - name: Upload to Google Drive
+        run: |
+          rclone move downloads/ gdrive:VimeoDownloads/ --progress
+
+      - name: Notify Telegram
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage" \
+            -d chat_id="${TELEGRAM_CHAT_ID}" \
+            -d text="✅ Video t-telechargat f Google Drive (VimeoDownloads)!\n🎞️ ${{ github.event.inputs.video_title }}\n🔗 ${{ github.event.inputs.video_url }}"
