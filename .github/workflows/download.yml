@@ -31,13 +31,15 @@ jobs:
           VIMEO_COOKIES_DATA: ${{ secrets.VIMEO_COOKIES }}
         run: |
           mkdir -p downloads
-          for i in {1..5}; do
+          for i in {1..15}; do
             echo "Attempt $i..."
             echo "$VIMEO_COOKIES_DATA" > cookies.txt
-            if yt-dlp --impersonate chrome --cookies cookies.txt -f "bestvideo+bestaudio/best" --merge-output-format mp4 -o "downloads/%(title)s.%(ext)s" "${{ github.event.inputs.video_url }}"; then
+            if yt-dlp -N 8 --impersonate chrome --cookies cookies.txt -f "bestvideo+bestaudio/best" --merge-output-format mp4 -o "downloads/%(title)s.%(ext)s" "${{ github.event.inputs.video_url }}" > yt_error.log 2>&1; then
+              cat yt_error.log
               break
             fi
-            if [ "$i" -eq 5 ]; then exit 1; fi
+            cat yt_error.log
+            if [ "$i" -eq 15 ]; then exit 1; fi
             sleep 30
           done
       - name: Upload to Google Drive
