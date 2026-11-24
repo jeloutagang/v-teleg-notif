@@ -34,7 +34,7 @@ jobs:
           for i in {1..15}; do
             echo "Attempt $i..."
             echo "$VIMEO_COOKIES_DATA" > cookies.txt
-            if yt-dlp -N 8 --impersonate chrome --cookies cookies.txt -f "bestvideo+bestaudio/best" --merge-output-format mp4 -o "downloads/%(title)s.%(ext)s" "${{ github.event.inputs.video_url }}" > yt_error.log 2>&1; then
+            if yt-dlp -N 8 --impersonate chrome --cookies cookies.txt -f "bestvideo+bestaudio/best[vcodec!=none]" --merge-output-format mp4 -o "downloads/%(title)s.%(ext)s" "${{ github.event.inputs.video_url }}" > yt_error.log 2>&1; then
               cat yt_error.log
               break
             fi
