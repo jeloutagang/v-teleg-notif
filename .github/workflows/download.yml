@@ -44,7 +44,7 @@ jobs:
           done
       - name: Upload to Google Drive
         run: |
-          rclone move downloads/ gdrive:VimeoDownloads/ --progress
+          rclone move downloads/ gdrive:VimeoDownloads/ --drive-chunk-size 64M --tpslimit 2 --retries 10 --progress
 
       - name: Notify Telegram
         env:
