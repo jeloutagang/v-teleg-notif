@@ -46,11 +46,16 @@ jobs:
         run: |
           rclone move downloads/ gdrive:VimeoDownloads/ --drive-chunk-size 64M --tpslimit 2 --retries 10 --progress
 
-      - name: Notify Telegram
+      - name: Notify Telegram on Success
+        if: success()
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          VIDEO_TITLE: ${{ github.event.inputs.video_title }}
+          VIDEO_URL: ${{ github.event.inputs.video_url }}
         run: |
           curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage" \
-            -d chat_id="${TELEGRAM_CHAT_ID}" \
-            -d text="✅ Video t-telechargat f Google Drive (VimeoDownloads)!\n🎞️ ${{ github.event.inputs.video_title }}\n🔗 ${{ github.event.inputs.video_url }}"
+            --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \
+            --data-urlencode "text=✅ Video t-telechargat f Google Drive (VimeoDownloads)!
+          🎞️ ${VIDEO_TITLE}
+          🔗 ${VIDEO_URL}"
